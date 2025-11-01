@@ -71,7 +71,7 @@ horse_db/
 1. Open **MySQL Workbench**.  
 2. Create a new database and import the provided SQL:
    ```sql
-   SOURCE racing_database.sql;
+   SOURCE ICS321 Project 1 DB.sql;
    ```
 3. This will create:
    - Tables (`Owner`, `Horse`, `Race`, `Stable`, `Trainer`, `Old_Info`)
