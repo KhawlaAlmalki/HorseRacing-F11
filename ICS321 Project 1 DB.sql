@@ -6,70 +6,70 @@ USE racing;
 -- Tables
 -- =========================================================
 CREATE TABLE Stable (
-  stableId   VARCHAR(15) NOT NULL,
-  stableName VARCHAR(30),
-  location   VARCHAR(30),
-  colors     VARCHAR(20),
-  PRIMARY KEY (stableId)
+                        stableId   VARCHAR(15) NOT NULL,
+                        stableName VARCHAR(30),
+                        location   VARCHAR(30),
+                        colors     VARCHAR(20),
+                        PRIMARY KEY (stableId)
 );
 
 CREATE TABLE Horse (
-  horseId      VARCHAR(15) NOT NULL,
-  horseName    VARCHAR(15) NOT NULL,
-  age          INT,
-  gender       CHAR,
-  registration INT NOT NULL,
-  stableId     VARCHAR(30) NOT NULL,
-  FOREIGN KEY (stableId) REFERENCES Stable(stableId),
-  PRIMARY KEY (horseId)
+                       horseId      VARCHAR(15) NOT NULL,
+                       horseName    VARCHAR(15) NOT NULL,
+                       age          INT,
+                       gender       CHAR,
+                       registration INT NOT NULL,
+                       stableId     VARCHAR(30) NOT NULL,
+                       FOREIGN KEY (stableId) REFERENCES Stable(stableId),
+                       PRIMARY KEY (horseId)
 );
 
 CREATE TABLE Owner (
-  ownerId VARCHAR(15) NOT NULL,
-  lname   VARCHAR(15),
-  fname   VARCHAR(15),
-  PRIMARY KEY (ownerId)
+                       ownerId VARCHAR(15) NOT NULL,
+                       lname   VARCHAR(15),
+                       fname   VARCHAR(15),
+                       PRIMARY KEY (ownerId)
 );
 
 CREATE TABLE Owns (
-  ownerId VARCHAR(15) NOT NULL,
-  horseId VARCHAR(15) NOT NULL,
-  PRIMARY KEY (ownerId, horseId),
-  FOREIGN KEY (ownerId) REFERENCES Owner(ownerId),
-  FOREIGN KEY (horseId) REFERENCES Horse(horseId)
+                      ownerId VARCHAR(15) NOT NULL,
+                      horseId VARCHAR(15) NOT NULL,
+                      PRIMARY KEY (ownerId, horseId),
+                      FOREIGN KEY (ownerId) REFERENCES Owner(ownerId),
+                      FOREIGN KEY (horseId) REFERENCES Horse(horseId)
 );
 
 CREATE TABLE Trainer (
-  trainerId VARCHAR(15) NOT NULL,
-  lname     VARCHAR(30),
-  fname     VARCHAR(30),
-  stableId  VARCHAR(30),
-  PRIMARY KEY (trainerId),
-  FOREIGN KEY (stableId) REFERENCES Stable(stableId)
+                         trainerId VARCHAR(15) NOT NULL,
+                         lname     VARCHAR(30),
+                         fname     VARCHAR(30),
+                         stableId  VARCHAR(30),
+                         PRIMARY KEY (trainerId),
+                         FOREIGN KEY (stableId) REFERENCES Stable(stableId)
 );
 
 CREATE TABLE Track (
-  trackName VARCHAR(30) NOT NULL,
-  location  VARCHAR(30),
-  length    INT,
-  PRIMARY KEY (trackName)
+                       trackName VARCHAR(30) NOT NULL,
+                       location  VARCHAR(30),
+                       length    INT,
+                       PRIMARY KEY (trackName)
 );
 
 CREATE TABLE Race (
-  raceId    VARCHAR(15) NOT NULL,
-  raceName  VARCHAR(30),
-  trackName VARCHAR(30),
-  raceDate  DATE,
-  raceTime  TIME,
-  PRIMARY KEY (raceId),
-  FOREIGN KEY (trackName) REFERENCES Track(trackName)
+                      raceId    VARCHAR(15) NOT NULL,
+                      raceName  VARCHAR(30),
+                      trackName VARCHAR(30),
+                      raceDate  DATE,
+                      raceTime  TIME,
+                      PRIMARY KEY (raceId),
+                      FOREIGN KEY (trackName) REFERENCES Track(trackName)
 );
 
 CREATE TABLE RaceResults (
-  raceId  VARCHAR(15) NOT NULL,
-  horseId VARCHAR(15) NOT NULL,
-  results VARCHAR(15),
-  prize   FLOAT(10,2),
+                             raceId  VARCHAR(15) NOT NULL,
+                             horseId VARCHAR(15) NOT NULL,
+                             results VARCHAR(15),
+                             prize   FLOAT(10,2),
   PRIMARY KEY (raceId, horseId),
   FOREIGN KEY (raceId) REFERENCES Race(raceId),
   FOREIGN KEY (horseId) REFERENCES Horse(horseId)
@@ -79,7 +79,7 @@ CREATE TABLE RaceResults (
 -- Audit table for deleted horses + trigger
 -- =========================================================
 CREATE TABLE IF NOT EXISTS Old_Info (
-    horseId VARCHAR(15) NOT NULL,
+                                        horseId VARCHAR(15) NOT NULL,
     horseName VARCHAR(15) NOT NULL,
     age INT,
     gender CHAR,
@@ -87,15 +87,15 @@ CREATE TABLE IF NOT EXISTS Old_Info (
     stableId VARCHAR(30) NOT NULL,
     deletion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (horseId, deletion_date)
-);
+    );
 
 DELIMITER //
 CREATE TRIGGER trg_backup_horse
-BEFORE DELETE ON Horse
-FOR EACH ROW
+    BEFORE DELETE ON Horse
+    FOR EACH ROW
 BEGIN
-  INSERT INTO Old_Info (horseId, horseName, age, gender, registration, stableId)
-  VALUES (OLD.horseId, OLD.horseName, OLD.age, OLD.gender, OLD.registration, OLD.stableId);
+    INSERT INTO Old_Info (horseId, horseName, age, gender, registration, stableId)
+    VALUES (OLD.horseId, OLD.horseName, OLD.age, OLD.gender, OLD.registration, OLD.stableId);
 END//
 DELIMITER ;
 
@@ -326,53 +326,64 @@ INSERT INTO RaceResults VALUES('race36','horse20','third',50000);
 -- Stored Procedure: DeleteOwner (corrected logic)
 -- =========================================================
 DROP PROCEDURE IF EXISTS DeleteOwner;
+
 DELIMITER //
-
-CREATE PROCEDURE DeleteOwner(IN p_owner_id VARCHAR(15))
+CREATE PROCEDURE DeleteOwner(IN owner_id VARCHAR(15))
 BEGIN
-    DECLARE had_error BOOL DEFAULT FALSE;
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET had_error = TRUE;
+    DECLARE exit_handler BOOLEAN DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET exit_handler = TRUE;
 
-    START TRANSACTION;
+START TRANSACTION;
 
-    -- 1) Identify horses owned EXCLUSIVELY by this owner (before removing Owns rows)
-    CREATE TEMPORARY TABLE tmp_sole_horses (horseId VARCHAR(15) PRIMARY KEY);
+-- Check if owner is also a trainer
+IF EXISTS (SELECT 1 FROM Trainer WHERE trainerId = owner_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot delete owner who is also a trainer';
+END IF;
 
-    INSERT INTO tmp_sole_horses (horseId)
-    SELECT o.horseId
-    FROM Owns o
-    JOIN (
-        SELECT horseId, COUNT(*) AS c
-        FROM Owns
-        GROUP BY horseId
-    ) agg ON agg.horseId = o.horseId
-    WHERE o.ownerId = p_owner_id
-      AND agg.c = 1;
+    -- Backup horses that will be deleted to Old_Info (ONLY exclusively owned horses)
+INSERT INTO Old_Info (horseId, horseName, age, gender, registration, stableId)
+SELECT DISTINCT h.horseId, h.horseName, h.age, h.gender, h.registration, h.stableId
+FROM Horse h
+         JOIN Owns o ON h.horseId = o.horseId
+WHERE o.ownerId = owner_id
+  AND NOT EXISTS (
+    SELECT 1 FROM Owns o2
+    WHERE o2.horseId = h.horseId
+      AND o2.ownerId != owner_id
+);
 
-    -- 2) Delete RaceResults for those single-owner horses
-    DELETE rr
-    FROM RaceResults rr
-    JOIN tmp_sole_horses sh ON sh.horseId = rr.horseId;
+-- Delete from RaceResults for horses owned ONLY by this owner
+DELETE rr FROM RaceResults rr
+    WHERE rr.horseId IN (
+        SELECT o.horseId FROM Owns o
+        WHERE o.ownerId = owner_id
+        AND NOT EXISTS (
+            SELECT 1 FROM Owns o2
+            WHERE o2.horseId = o.horseId
+            AND o2.ownerId != owner_id
+        )
+    );
 
-    -- 3) Remove ownership links for this owner
-    DELETE FROM Owns
-    WHERE ownerId = p_owner_id;
+    -- Delete ownership relationships for this owner
+DELETE FROM Owns WHERE ownerId = owner_id;
 
-    -- 4) Delete the single-owner horses (trigger will back them up to Old_Info)
-    DELETE h
-    FROM Horse h
-    JOIN tmp_sole_horses sh ON sh.horseId = h.horseId;
+-- Delete horses owned ONLY by this owner (no other owners)
+DELETE h FROM Horse h
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Owns o WHERE o.horseId = h.horseId
+    )
+    AND h.horseId IN (
+        SELECT horseId FROM Owns WHERE ownerId = owner_id
+    );
 
-    -- 5) Delete the owner
-    DELETE FROM Owner
-    WHERE ownerId = p_owner_id;
+    -- Finally delete the owner
+DELETE FROM Owner WHERE ownerId = owner_id;
 
-    DROP TEMPORARY TABLE IF EXISTS tmp_sole_horses;
-
-    IF had_error THEN
+IF exit_handler THEN
         ROLLBACK;
-    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error deleting owner and related information';
+ELSE
         COMMIT;
-    END IF;
+END IF;
 END//
 DELIMITER ;
