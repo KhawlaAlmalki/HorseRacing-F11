@@ -131,6 +131,6 @@ http://localhost:3000
 | Database | MySQL |
 | Frontend | HTML5, CSS3, JavaScript |
 | Design | Custom responsive UI |
-| Environment | WebStorm / VS Code |
+| Environment | WebStorm |
 
 ---
