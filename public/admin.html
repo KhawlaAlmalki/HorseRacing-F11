@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Horse Racing System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Horse Racing Database System</h1>
+        <p>Administrator Control Panel</p>
+    </div>
+
+    <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/admin.html" class="active">Admin Panel</a>
+        <a href="/guest.html">Guest Access</a>
+    </nav>
+
+    <main class="content">
+        <!-- Delete Owner Section -->
+        <div class="section">
+            <h3>Delete Owner & All Related Information</h3>
+            <div class="form-group">
+                <div class="input-group">
+                    <label>Owner ID</label>
+                    <input type="text" id="ownerId" placeholder="Enter Owner ID (e.g., owner1)">
+                </div>
+                <button class="btn btn-danger" onclick="deleteOwner()">Delete Owner</button>
+            </div>
+
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('owners')">
+                    <h4>Current Owners</h4>
+                </div>
+                <div class="db-content" id="ownersDbContent">
+                    <div id="ownersTable" class="loading">Loading owners data...</div>
+                </div>
+            </div>
+
+            <div class="db-view" style="margin-top: 20px;">
+                <div class="db-header" onclick="toggleDbView('oldInfo')">
+                    <h4>Deleted Horses History (Old_Info)</h4>
+                </div>
+                <div class="db-content" id="oldInfoDbContent">
+                    <div id="oldInfoResult" class="loading">Click header to load deleted horses history</div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Race Section -->
+        <section class="section">
+            <h3>Add New Race with Results</h3>
+
+            <!-- Race Information -->
+            <div class="form-group">
+                <div class="input-group">
+                    <label for="raceId">Race ID *</label>
+                    <input type="text" id="raceId" placeholder="e.g., race37" required>
+                </div>
+                <div class="input-group">
+                    <label for="raceName">Race Name *</label>
+                    <input type="text" id="raceName" placeholder="e.g., Summer Cup" required>
+                </div>
+                <div class="input-group">
+                    <label for="trackName">Track Name *</label>
+                    <input type="text" id="trackName" placeholder="e.g., Riyadh" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <label for="raceDate">Race Date *</label>
+                    <input type="date" id="raceDate" required>
+                </div>
+                <div class="input-group">
+                    <label for="raceTime">Race Time</label>
+                    <input type="time" id="raceTime">
+                </div>
+            </div>
+
+            <!-- Race Results -->
+            <div class="race-results-section">
+                <h4>Race Results *</h4>
+                <small class="helper-text">At least one horse result is required</small>
+
+                <div id="raceResultsContainer">
+                    <div class="result-row">
+                        <div class="input-group">
+                            <label>Horse ID *</label>
+                            <input type="text" class="horse-id-input" placeholder="e.g., horse1" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Position *</label>
+                            <select class="position-select" required>
+                                <option value="">Select position</option>
+                                <option value="first">First</option>
+                                <option value="second">Second</option>
+                                <option value="third">Third</option>
+                                <option value="fourth">Fourth</option>
+                                <option value="last">Last</option>
+                                <option value="no show">No Show</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Prize Money ($)</label>
+                            <input type="number" class="prize-input" placeholder="e.g., 50000" min="0" step="100">
+                        </div>
+                        <button type="button" class="btn-remove-result" onclick="removeResultRow(this)" disabled>Remove</button>
+                    </div>
+                </div>
+
+                <div class="result-actions">
+                    <button type="button" class="btn btn-success" onclick="addResultRow()">Add Another Horse</button>
+                    <button type="button" class="btn btn-warning" onclick="resetResultsForm()">Reset Results</button>
+                </div>
+            </div>
+
+            <button class="btn" onclick="submitRaceWithResults()">Add Race with Results</button>
+
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('races')">
+                    <h4>Current Races</h4>
+                </div>
+                <div class="db-content" id="racesDbContent">
+                    <div id="racesTable" class="loading">Loading races data...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Move Horse Section -->
+        <section class="section">
+            <h3>Move Horse to New Stable</h3>
+            <div class="form-group">
+                <div class="input-group">
+                    <label for="horseId">Horse ID</label>
+                    <input type="text" id="horseId" placeholder="e.g., horse1">
+                </div>
+                <div class="input-group">
+                    <label for="newStableId">New Stable ID</label>
+                    <input type="text" id="newStableId" placeholder="e.g., stable2">
+                </div>
+                <button class="btn" onclick="moveHorse()">Move Horse</button>
+            </div>
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('horses')">
+                    <h4>Current Horses</h4>
+                </div>
+                <div class="db-content" id="horsesDbContent">
+                    <div id="horsesTable" class="loading">Loading horses data...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Approve Trainer Section -->
+        <section class="section">
+            <h3>Approve New Trainer</h3>
+            <div class="form-group">
+                <div class="input-group">
+                    <label for="trainerId">Trainer ID</label>
+                    <input type="text" id="trainerId" placeholder="e.g., trainer9">
+                </div>
+                <div class="input-group">
+                    <label for="trainerFname">First Name</label>
+                    <input type="text" id="trainerFname" placeholder="e.g., John">
+                </div>
+                <div class="input-group">
+                    <label for="trainerLname">Last Name</label>
+                    <input type="text" id="trainerLname" placeholder="e.g., Smith">
+                </div>
+                <div class="input-group">
+                    <label for="trainerStableId">Stable ID</label>
+                    <input type="text" id="trainerStableId" placeholder="e.g., stable1">
+                </div>
+                <button class="btn" onclick="approveTrainer()">Approve Trainer</button>
+            </div>
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('trainers')">
+                    <h4>Current Trainers</h4>
+                </div>
+                <div class="db-content" id="trainersDbContent">
+                    <div id="trainersTable" class="loading">Loading trainers data...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="notification" class="notification"></div>
+
+<script>
+    // =============================================
+    // INITIALIZATION
+    // =============================================
+    window.onload = function() {
+        loadAllData();
+        loadAvailableTracks();
+        updateRemoveButtonsState();
+    };
+
+    function loadAllData() {
+        loadOwners();
+        loadRaces();
+        loadHorses();
+        loadTrainers();
+    }
+
+    // =============================================
+    // NOTIFICATION SYSTEM
+    // =============================================
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.className = `notification ${type} show`;
+        notification.textContent = message;
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 4000);
+    }
+
+    // =============================================
+    // DATA LOADING FUNCTIONS
+    // =============================================
+    async function loadData(endpoint, elementId, columns) {
+        try {
+            const response = await fetch(endpoint);
+            const data = await response.json();
+
+            let html = `<table><tr>${columns.map(col => `<th>${col}</th>`).join('')}</tr>`;
+            data.forEach(item => {
+                html += `<tr>${columns.map(col => `<td>${item[col] || ''}</td>`).join('')}</tr>`;
+            });
+            html += '</table>';
+
+            document.getElementById(elementId).innerHTML = html;
+        } catch (err) {
+            document.getElementById(elementId).innerHTML = '<div class="error-message">Error loading data</div>';
+        }
+    }
+
+    function loadOwners() {
+        loadData('/api/owners', 'ownersTable', ['ownerId', 'fname', 'lname']);
+    }
+
+    function loadRaces() {
+        loadData('/api/races', 'racesTable', ['raceId', 'raceName', 'trackName', 'raceDate', 'raceTime']);
+    }
+
+    function loadHorses() {
+        loadData('/api/horses', 'horsesTable', ['horseId', 'horseName', 'stableId', 'age', 'gender']);
+    }
+
+    function loadTrainers() {
+        loadData('/api/trainers', 'trainersTable', ['trainerId', 'fname', 'lname', 'stableId']);
+    }
+
+    function loadAvailableTracks() {
+        fetch('/api/tracks')
+            .then(response => response.json())
+            .then(tracks => {
+                const trackInput = document.getElementById('trackName');
+                trackInput.placeholder = `e.g., ${tracks.map(t => t.trackName).join(', ')}`;
+            })
+            .catch(err => console.log('Could not load tracks:', err));
+    }
+
+    // =============================================
+    // DELETE OWNER FUNCTIONALITY
+    // =============================================
+    function deleteOwner() {
+        const ownerId = document.getElementById('ownerId').value.trim();
+
+        if (!ownerId) {
+            showNotification('Please enter Owner ID', 'error');
+            return;
+        }
+
+        if (!confirm(`WARNING: This will delete owner ${ownerId} AND ALL horses owned exclusively by them. This action cannot be undone!`)) {
+            return;
+        }
+
+        const button = document.querySelector('button[onclick="deleteOwner()"]');
+        const originalText = button.textContent;
+
+        button.textContent = 'Deleting Owner...';
+        button.disabled = true;
+
+        fetch(`/api/owners/${ownerId}`, { method: 'DELETE' })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showNotification(data.message, 'success');
+                document.getElementById('ownerId').value = '';
+                loadOwners();
+                loadHorses();
+                loadOldInfo();
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                showNotification('Error: ' + error.message, 'error');
+            })
+            .finally(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+    }
+
+    function loadOldInfo() {
+        fetch('/api/old-info')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    document.getElementById('oldInfoResult').innerHTML = '<div class="info-message">No deleted horses found in history</div>';
+                    return;
+                }
+
+                let html = '<table><tr><th>Horse ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Stable</th><th>Registration</th><th>Deleted Date</th></tr>';
+                data.forEach(horse => {
+                    html += `<tr>
+                    <td>${horse.horseId}</td>
+                    <td>${horse.horseName}</td>
+                    <td>${horse.age}</td>
+                    <td>${horse.gender}</td>
+                    <td>${horse.stableId}</td>
+                    <td>${horse.registration}</td>
+                    <td>${new Date(horse.deletion_date).toLocaleString()}</td>
+                </tr>`;
+                });
+                html += '</table>';
+                document.getElementById('oldInfoResult').innerHTML = html;
+            })
+            .catch(err => {
+                document.getElementById('oldInfoResult').innerHTML = '<div class="error-message">Error loading deleted horses history</div>';
+            });
+    }
+
+    // Update window.onload to include loadOldInfo
+    window.onload = function() {
+        loadOwners();
+        loadRaces();
+        loadHorses();
+        loadTrainers();
+        loadAvailableTracks();
+        updateRemoveButtonsState();
+        loadOldInfo();
+    };
+
+    // =============================================
+    // MOVE HORSE FUNCTIONALITY
+    // =============================================
+    function moveHorse() {
+        const horseId = document.getElementById('horseId').value.trim();
+        const newStableId = document.getElementById('newStableId').value.trim();
+
+        if (!validateRequired(horseId, 'Horse ID', 'horseId')) return;
+        if (!validateRequired(newStableId, 'New Stable ID', 'newStableId')) return;
+        if (!validateFormat(horseId, /^horse[0-9]+$/i, 'Horse ID must be in format "horse1", "horse2", etc.', 'horseId')) return;
+        if (!validateFormat(newStableId, /^stable[0-9]+$/i, 'Stable ID must be in format "stable1", "stable2", etc.', 'newStableId')) return;
+
+        executeAction(
+            `Moving Horse ${horseId}...`,
+            `/api/horses/${horseId}/move`,
+            'PUT',
+            { newStableId },
+            `Horse ${horseId} moved to stable ${newStableId} successfully!`,
+            () => {
+                document.getElementById('horseId').value = '';
+                document.getElementById('newStableId').value = '';
+                loadHorses();
+            }
+        );
+    }
+
+    // =============================================
+    // APPROVE TRAINER FUNCTIONALITY
+    // =============================================
+    function approveTrainer() {
+        const trainerData = {
+            trainerId: document.getElementById('trainerId').value.trim(),
+            fname: document.getElementById('trainerFname').value.trim(),
+            lname: document.getElementById('trainerLname').value.trim(),
+            stableId: document.getElementById('trainerStableId').value.trim()
+        };
+
+        if (!validateRequired(trainerData.trainerId, 'Trainer ID', 'trainerId')) return;
+        if (!validateRequired(trainerData.fname, 'First Name', 'trainerFname')) return;
+        if (!validateRequired(trainerData.lname, 'Last Name', 'trainerLname')) return;
+        if (!validateRequired(trainerData.stableId, 'Stable ID', 'trainerStableId')) return;
+        if (!validateFormat(trainerData.trainerId, /^trainer[0-9]+$/i, 'Trainer ID must be in format "trainer1", "trainer2", etc.', 'trainerId')) return;
+        if (!validateFormat(trainerData.stableId, /^stable[0-9]+$/i, 'Stable ID must be in format "stable1", "stable2", etc.', 'trainerStableId')) return;
+        if (!validateName(trainerData.fname, 'First Name', 'trainerFname')) return;
+        if (!validateName(trainerData.lname, 'Last Name', 'trainerLname')) return;
+
+        executeAction(
+            'Approving Trainer...',
+            '/api/trainers',
+            'POST',
+            trainerData,
+            `Trainer ${trainerData.fname} ${trainerData.lname} approved successfully!`,
+            () => {
+                document.getElementById('trainerId').value = '';
+                document.getElementById('trainerFname').value = '';
+                document.getElementById('trainerLname').value = '';
+                document.getElementById('trainerStableId').value = '';
+                loadTrainers();
+            }
+        );
+    }
+
+    // =============================================
+    // RACE RESULTS MANAGEMENT
+    // =============================================
+    function addResultRow() {
+        const container = document.getElementById('raceResultsContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'result-row';
+        newRow.innerHTML = `
+                <div class="input-group">
+                    <label>Horse ID *</label>
+                    <input type="text" class="horse-id-input" placeholder="e.g., horse1" required>
+                </div>
+                <div class="input-group">
+                    <label>Position *</label>
+                    <select class="position-select" required>
+                        <option value="">Select position</option>
+                        <option value="first">First</option>
+                        <option value="second">Second</option>
+                        <option value="third">Third</option>
+                        <option value="fourth">Fourth</option>
+                        <option value="last">Last</option>
+                        <option value="no show">No Show</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Prize Money ($)</label>
+                    <input type="number" class="prize-input" placeholder="e.g., 50000" min="0" step="100">
+                </div>
+                <button type="button" class="btn-remove-result" onclick="removeResultRow(this)">Remove</button>
+            `;
+        container.appendChild(newRow);
+        updateRemoveButtonsState();
+    }
+
+    function removeResultRow(button) {
+        const resultRows = document.querySelectorAll('.result-row');
+        if (resultRows.length > 1) {
+            button.closest('.result-row').remove();
+            updateRemoveButtonsState();
+        } else {
+            showNotification('At least one horse result is required', 'warning');
+        }
+    }
+
+    function updateRemoveButtonsState() {
+        const resultRows = document.querySelectorAll('.result-row');
+        const removeButtons = document.querySelectorAll('.btn-remove-result');
+        removeButtons.forEach(button => {
+            button.disabled = resultRows.length <= 1;
+        });
+    }
+
+    function resetResultsForm() {
+        if (confirm('Are you sure you want to reset all race results? This will clear all horse entries.')) {
+            const container = document.getElementById('raceResultsContainer');
+            container.innerHTML = `
+                    <div class="result-row">
+                        <div class="input-group">
+                            <label>Horse ID *</label>
+                            <input type="text" class="horse-id-input" placeholder="e.g., horse1" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Position *</label>
+                            <select class="position-select" required>
+                                <option value="">Select position</option>
+                                <option value="first">First</option>
+                                <option value="second">Second</option>
+                                <option value="third">Third</option>
+                                <option value="fourth">Fourth</option>
+                                <option value="last">Last</option>
+                                <option value="no show">No Show</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Prize Money ($)</label>
+                            <input type="number" class="prize-input" placeholder="e.g., 50000" min="0" step="100">
+                        </div>
+                        <button type="button" class="btn-remove-result" onclick="removeResultRow(this)" disabled>Remove</button>
+                    </div>
+                `;
+            showNotification('Race results form reset', 'warning');
+        }
+    }
+
+    // =============================================
+    // RACE FORM VALIDATION & SUBMISSION
+    // =============================================
+    function validateRaceForm() {
+        const errors = [];
+        const results = [];
+
+        const raceData = {
+            raceId: document.getElementById('raceId').value.trim(),
+            raceName: document.getElementById('raceName').value.trim(),
+            trackName: document.getElementById('trackName').value.trim(),
+            raceDate: document.getElementById('raceDate').value,
+            raceTime: document.getElementById('raceTime').value
+        };
+
+        resetAllFieldBorders();
+
+        // Validate Race ID
+        if (!raceData.raceId) {
+            errors.push('Race ID is required');
+            highlightFieldAsError('raceId');
+        } else if (!/^race[0-9]+$/i.test(raceData.raceId)) {
+            errors.push('Race ID must be in format "race1", "race2", etc.');
+            highlightFieldAsError('raceId');
+        }
+
+        // Validate Race Name
+        if (!raceData.raceName) {
+            errors.push('Race Name is required');
+            highlightFieldAsError('raceName');
+        } else if (raceData.raceName.length < 2) {
+            errors.push('Race Name must be at least 2 characters long');
+            highlightFieldAsError('raceName');
+        }
+
+        // Validate Track Name
+        if (!raceData.trackName) {
+            errors.push('Track Name is required');
+            highlightFieldAsError('trackName');
+        }
+
+        // Validate Race Date
+        if (!raceData.raceDate) {
+            errors.push('Race Date is required');
+            highlightFieldAsError('raceDate');
+        }
+
+        // Validate Race Results
+        const resultRows = document.querySelectorAll('.result-row');
+        let hasValidResults = false;
+
+        resultRows.forEach((row, index) => {
+            const horseId = row.querySelector('.horse-id-input').value.trim();
+            const position = row.querySelector('.position-select').value;
+            const prizeInput = row.querySelector('.prize-input').value;
+            const prize = prizeInput ? parseFloat(prizeInput) : 0;
+
+            if (horseId || position) {
+                if (!horseId) {
+                    errors.push(`Horse ID is required for horse #${index + 1}`);
+                    row.querySelector('.horse-id-input').style.borderColor = '#e74c3c';
+                } else if (!/^horse[0-9]+$/i.test(horseId)) {
+                    errors.push(`Horse ID "${horseId}" must be in format "horse1", "horse2", etc.`);
+                    row.querySelector('.horse-id-input').style.borderColor = '#e74c3c';
+                }
+
+                if (!position) {
+                    errors.push(`Position is required for horse #${index + 1}`);
+                    row.querySelector('.position-select').style.borderColor = '#e74c3c';
+                }
+
+                if (prize < 0) {
+                    errors.push(`Prize money cannot be negative for horse #${index + 1}`);
+                }
+
+                if (horseId && position) {
+                    results.push({ horseId, position, prize });
+                    hasValidResults = true;
+                }
+            }
+        });
+
+        if (!hasValidResults) {
+            errors.push('At least one horse result is required');
+        }
+
+        const horseIds = results.map(result => result.horseId);
+        if (horseIds.length !== new Set(horseIds).size) {
+            errors.push('Duplicate horse IDs found in the same race');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors,
+            raceData,
+            results
+        };
+    }
+
+    function submitRaceWithResults() {
+        const validation = validateRaceForm();
+
+        if (!validation.isValid) {
+            showNotification(validation.errors[0], 'error');
+            return;
+        }
+
+        const requestData = {
+            race: validation.raceData,
+            results: validation.results
+        };
+
+        executeAction(
+            'Adding Race...',
+            '/api/races-with-results',
+            'POST',
+            requestData,
+            `Race "${validation.raceData.raceName}" added successfully with ${validation.results.length} horses!`,
+            () => {
+                clearRaceForm();
+                loadRaces();
+            }
+        );
+    }
+
+    function clearRaceForm() {
+        document.getElementById('raceId').value = '';
+        document.getElementById('raceName').value = '';
+        document.getElementById('trackName').value = '';
+        document.getElementById('raceDate').value = '';
+        document.getElementById('raceTime').value = '';
+
+        const container = document.getElementById('raceResultsContainer');
+        container.innerHTML = `
+                <div class="result-row">
+                    <div class="input-group">
+                        <label>Horse ID *</label>
+                        <input type="text" class="horse-id-input" placeholder="e.g., horse1" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Position *</label>
+                        <select class="position-select" required>
+                            <option value="">Select position</option>
+                            <option value="first">First</option>
+                            <option value="second">Second</option>
+                            <option value="third">Third</option>
+                            <option value="fourth">Fourth</option>
+                            <option value="last">Last</option>
+                            <option value="no show">No Show</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Prize Money ($)</label>
+                        <input type="number" class="prize-input" placeholder="e.g., 50000" min="0" step="100">
+                    </div>
+                    <button type="button" class="btn-remove-result" onclick="removeResultRow(this)" disabled>Remove</button>
+                </div>
+            `;
+        resetAllFieldBorders();
+    }
+
+    // =============================================
+    // UTILITY FUNCTIONS
+    // =============================================
+    function resetAllFieldBorders() {
+        const fields = ['raceId', 'raceName', 'trackName', 'raceDate', 'raceTime'];
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) field.style.borderColor = '';
+        });
+
+        document.querySelectorAll('.horse-id-input, .position-select, .prize-input').forEach(field => {
+            field.style.borderColor = '';
+        });
+    }
+
+    function highlightFieldAsError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.style.borderColor = '#e74c3c';
+            field.focus();
+        }
+    }
+
+    function validateRequired(value, fieldName, fieldId) {
+        if (!value) {
+            showNotification(`${fieldName} is required`, 'error');
+            document.getElementById(fieldId).focus();
+            return false;
+        }
+        return true;
+    }
+
+    function validateFormat(value, pattern, errorMessage, fieldId) {
+        if (!pattern.test(value)) {
+            showNotification(errorMessage, 'error');
+            document.getElementById(fieldId).focus();
+            return false;
+        }
+        return true;
+    }
+
+    function validateName(name, fieldName, fieldId) {
+        if (!/^[a-zA-Z\s]+$/.test(name)) {
+            showNotification(`${fieldName} can only contain letters and spaces`, 'error');
+            document.getElementById(fieldId).focus();
+            return false;
+        }
+        if (name.length < 2) {
+            showNotification(`${fieldName} must be at least 2 characters long`, 'error');
+            document.getElementById(fieldId).focus();
+            return false;
+        }
+        return true;
+    }
+
+    async function executeAction(loadingText, endpoint, method, data, successMessage, onSuccess) {
+        const submitButton = event.target;
+        const originalText = submitButton.textContent;
+
+        submitButton.textContent = loadingText;
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(endpoint, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+
+            showNotification(successMessage, 'success');
+            onSuccess();
+        } catch (error) {
+            showNotification('Error: ' + error.message, 'error');
+        } finally {
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        }
+    }
+
+    function toggleDbView(type) {
+        const content = document.getElementById(type + 'DbContent');
+        const header = content.previousElementSibling;
+        header.classList.toggle('active');
+        content.classList.toggle('open');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+/* ---------- Design tokens ---------- */
+:root{
+    --accent: #717780;           /* warm cocoa */
+    --accent-2: #cdcdd6;          /* deeper tone */
+    --ink: rgb(26, 37, 35);              /* page background */
+    --text:#ffffff;
+    --muted: rgba(255,255,255,.85);
+    --primary: rgba(224, 227, 230, 0.75);           /* blue focus ring / glow */
+    --success: #146a40;
+    --danger:#e35a5a;
+    --warning:#f4b542;
+
+    --r: 14px;
+    --shadow: 0 16px 48px rgba(0,0,0,.35);
+    --font:"Poppins","Segoe UI",system-ui,sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+    margin:0; font-family:var(--font);
+    color:var(--text); background:var(--ink);
+    -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- Container shell ---------- */
+.container{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 18px 48px;
+}
+
+/* ---------- Header (matches theme) ---------- */
+.header {
+    background: linear-gradient(50deg, rgb(26, 37, 35), #babebd);
+    text-align: center;
+    padding: 70px 0 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.header h1 {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+}
+
+
+.header p{
+    margin:0;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* ---------- Top nav ---------- */
+.nav{
+    position: sticky; top: 0; z-index: 12;
+    display:flex; gap:14px; align-items:center;
+    padding: 14px 0 16px; margin-bottom: 18px;
+    background: linear-gradient(50deg, rgb(26, 37, 35), #babebd);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav a{
+    text-decoration:none;
+    color: var(--muted);
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+}
+.nav a:hover{ color:#fff; background: rgba(255,255,255,.06) }
+.nav a.active{
+    color:#fff;
+    background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+    border: 1px solid rgba(255,255,255,.12);
+}
+
+/* ---------- Content sections ---------- */
+.content{ padding-top: 8px }
+
+.section{
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--r);
+    padding: 22px;
+    margin: 18px 0;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+.section h3{
+    margin: 0 0 14px;
+    font-size: clamp(18px, 2.3vw, 22px);
+    display:flex; align-items:center; gap:8px;
+}
+.section::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:4px;
+    border-radius: var(--r) 0 0 var(--r);
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+}
+
+/* ---------- Forms ---------- */
+.form-group{
+    display:flex; flex-wrap:wrap; gap:14px;
+    margin: 10px 0 16px;
+    align-items: end;
+}
+.input-group{ min-width: 220px; flex:1 }
+.input-group label{
+    display:block; margin:0 0 6px;
+    color: var(--muted); font-weight:700;
+}
+.input-group input, .input-group select{
+    width:100%; padding:12px 14px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.06);
+    color:#fff; font-weight:600;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.input-group input:focus, .input-group select:focus{
+    outline:none;
+    border-color: color-mix(in oklab, var(--primary) 60%, #fff);
+    box-shadow: 0 0 0 4px rgba(122,162,255,.2);
+    background: rgba(255,255,255,.08);
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+    appearance:none; cursor:pointer; user-select:none;
+    padding:12px 18px; border-radius:12px; font-weight:800;
+    border:2px solid transparent; color:#0d1323;
+    background:#fff; transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.btn:hover{ transform: translateY(-2px) }
+.btn:active{ transform: translateY(0) }
+
+.btn-success{
+    background: linear-gradient(135deg, var(--success), #1dbf6a);
+    color: #052216;
+}
+.btn-danger{
+    background: linear-gradient(135deg, var(--danger), #c33b3b);
+    color:#fff;
+}
+.btn-warning{
+    background: linear-gradient(135deg, var(--warning), #d7941d);
+    color:#2a1b06;
+}
+.btn.outline{
+    background: transparent; color:#fff; border-color: rgba(255,255,255,.8);
+}
+.btn.secondary{
+    background: linear-gradient(135deg, #ffffff, #e9eefc);
+    color:#233a8a;
+}
+
+/* ---------- DB views / collapsibles ---------- */
+.db-view{ margin-top:16px }
+.db-header{
+    cursor:pointer; padding:12px 14px; border-radius:12px;
+    background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.12);
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.db-header h4{ margin:0; font-size:16px }
+.db-header::after{
+    content:"▼"; font-size:.9em; opacity:.9; transition: transform .2s ease;
+}
+.db-header.active::after{ transform: rotate(180deg) }
+
+.db-content{
+    max-height:0; overflow:hidden; transition:max-height .3s ease;
+    border-radius: 0 0 var(--r) var(--r);
+    background: rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-top:none; padding:0 14px;
+}
+.db-content.open{ max-height:900px; padding:12px 14px }
+
+/* ---------- Tables ---------- */
+table{ width:100%; border-collapse:collapse; background:transparent }
+th, td{ padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08) }
+th{
+    text-align:left; color:#dfe6f6;
+    background: rgba(255,255,255,.03);
+    font-weight:800; letter-spacing:.02em;
+}
+tr:hover td{ background: rgba(255,255,255,.03) }
+.loading{ color: var(--muted); font-style: italic; padding:12px }
+
+/* ---------- Race results sub-form ---------- */
+.race-results-section{
+    background: rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius: var(--r);
+    padding:16px; margin:10px 0 16px;
+}
+.race-results-section h4{ margin:0 0 6px }
+.helper-text{ color: var(--muted) }
+
+.result-row{
+    display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap;
+    padding:12px; margin:10px 0; border-radius:10px;
+    background: rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+}
+.btn-remove-result{
+    background: #c33b3b; color:#fff; border:none;
+    padding:10px 12px; border-radius:8px; cursor:pointer;
+}
+.btn-remove-result:disabled{ opacity:.5; cursor:not-allowed }
+
+/* ---------- Notifications ---------- */
+.notification{
+    position: fixed; top: 20px; right: 20px;
+    padding: 14px 18px; border-radius: 12px; font-weight:800; z-index:1000;
+    transform: translateX(400px); transition: transform .25s ease;
+    color:#fff; box-shadow: 0 10px 28px rgba(0,0,0,.25);
+}
+.notification.show{ transform: translateX(0) }
+.notification.success{ background: linear-gradient(135deg, var(--success), #1dbf6a) }
+.notification.error{ background: linear-gradient(135deg, var(--danger), #a32a2a) }
+.notification.warning{ background: linear-gradient(135deg, var(--warning), #d7941d); color:#2a1b06 }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px){
+    .nav{ padding: 12px 0 }
+    .form-group{ flex-direction: column; align-items: stretch }
+    .input-group{ min-width: 100% }
+}

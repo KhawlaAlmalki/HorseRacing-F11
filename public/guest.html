@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Access - Horse Racing System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Horse Racing Database System</h1>
+        <p>Guest Access Portal</p>
+    </div>
+
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/admin.html">Admin Panel</a>
+        <a href="/guest.html" class="active">Guest Access</a>
+    </div>
+
+    <div class="content">
+        <!-- Search Horses by Owner Last Name -->
+        <div class="section">
+            <h3>Search Horses by Owner Last Name</h3>
+            <div class="form-group">
+                <div class="input-group">
+                    <label>Owner Last Name</label>
+                    <input type="text" id="ownerLastName" placeholder="e.g., Saeed, Mohammed, Fahd">
+                </div>
+                <button class="btn" onclick="searchHorsesByOwner()">Search Horses</button>
+            </div>
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('horsesByOwner')">
+                    <h4>Horses and Trainers</h4>
+                </div>
+                <div class="db-content" id="horsesByOwnerDbContent">
+                    <div id="horsesByOwnerResult" class="loading">Enter owner last name to search</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browse Winning Trainers -->
+        <div class="section">
+            <h3>Winning Trainers</h3>
+            <div class="form-group">
+                <button class="btn" onclick="loadWinningTrainers()">Show Winning Trainers</button>
+            </div>
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('winningTrainers')">
+                    <h4>First Place Winners</h4>
+                </div>
+                <div class="db-content" id="winningTrainersDbContent">
+                    <div id="winningTrainersResult" class="loading">Click button to load winning trainers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trainer Winnings Summary -->
+        <div class="section">
+            <h3>Trainer Winnings Summary</h3>
+            <div class="form-group">
+                <button class="btn" onclick="loadTrainerWinnings()">Show Winnings Ranking</button>
+            </div>
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('trainerWinnings')">
+                    <h4>Prize Money Rankings</h4>
+                </div>
+                <div class="db-content" id="trainerWinningsDbContent">
+                    <div id="trainerWinningsResult" class="loading">Click button to load winnings summary</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Track Statistics -->
+        <div class="section">
+            <h3>Track Statistics</h3>
+            <div class="form-group">
+                <button class="btn" onclick="loadTrackStatistics()">Show Track Stats</button>
+            </div>
+            <div class="db-view">
+                <div class="db-header" onclick="toggleDbView('trackStats')">
+                    <h4>Race Track Analytics</h4>
+                </div>
+                <div class="db-content" id="trackStatsDbContent">
+                    <div id="trackStatsResult" class="loading">Click button to load track statistics</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification"></div>
+
+<script>
+    // Utility Functions
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = 'notification ' + type;
+        notification.classList.add('show');
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 4000);
+    }
+
+    function toggleDbView(type) {
+        const content = document.getElementById(type + 'DbContent');
+        const header = content.previousElementSibling;
+        header.classList.toggle('active');
+        content.classList.toggle('open');
+    }
+
+    // Common function to handle API calls and display results
+    async function handleApiCall(endpoint, resultElementId, button, successMessage, buildTableHTML) {
+        const resultDiv = document.getElementById(resultElementId);
+        const originalText = button.textContent;
+
+        resultDiv.innerHTML = '<div class="loading">Loading...</div>';
+        button.textContent = 'Loading...';
+        button.disabled = true;
+
+        try {
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.length === 0) {
+                resultDiv.innerHTML = '<div class="error-message">No data found</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = buildTableHTML(data);
+
+            // Auto-expand the section
+            const dbContent = document.getElementById(resultElementId.replace('Result', 'DbContent'));
+            const dbHeader = dbContent.previousElementSibling;
+            dbContent.classList.add('open');
+            dbHeader.classList.add('active');
+
+            showNotification(successMessage.replace('${count}', data.length), 'success');
+        } catch (error) {
+            console.error('API call error:', error);
+            let userMessage = error.message;
+            if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+                userMessage = 'Network error. Please check your connection.';
+            }
+            resultDiv.innerHTML = '<div class="error-message">Error: ' + userMessage + '</div>';
+            showNotification(userMessage, 'error');
+        } finally {
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+    }
+
+    // 1. Search Horses by Owner Last Name
+    function searchHorsesByOwner() {
+        const lastName = document.getElementById('ownerLastName').value.trim();
+
+        if (!lastName) {
+            showNotification('Please enter owner last name', 'error');
+            document.getElementById('ownerLastName').focus();
+            return;
+        }
+
+        if (!/^[a-zA-Z\s]+$/.test(lastName)) {
+            showNotification('Owner last name can only contain letters and spaces', 'error');
+            document.getElementById('ownerLastName').focus();
+            return;
+        }
+
+        const button = document.querySelector('button[onclick="searchHorsesByOwner()"]');
+        const endpoint = `/api/guest/horses-by-owner?lastName=${encodeURIComponent(lastName)}`;
+
+        function buildTableHTML(data) {
+            let html = '<table><tr><th>Horse Name</th><th>Age</th><th>Trainer First Name</th><th>Trainer Last Name</th></tr>';
+            data.forEach(horse => {
+                html += `<tr>
+                        <td>${horse.horseName}</td>
+                        <td>${horse.age}</td>
+                        <td>${horse.trainerFname || 'N/A'}</td>
+                        <td>${horse.trainerLname || 'N/A'}</td>
+                    </tr>`;
+            });
+            html += '</table>';
+            return html;
+        }
+
+        handleApiCall(
+            endpoint,
+            'horsesByOwnerResult',
+            button,
+            `Found ${lastName}'${lastName.endsWith('s') ? '' : 's'} \${count} horses`,
+            buildTableHTML
+        );
+    }
+
+    // 2. Browse Winning Trainers
+    function loadWinningTrainers() {
+        const button = document.querySelector('button[onclick="loadWinningTrainers()"]');
+
+        function buildTableHTML(data) {
+            let html = '<table><tr><th>Trainer First Name</th><th>Trainer Last Name</th><th>Winning Horse</th><th>Winning Race</th><th>Prize Money</th></tr>';
+            data.forEach(trainer => {
+                html += `<tr>
+                        <td>${trainer.trainerFname}</td>
+                        <td>${trainer.trainerLname}</td>
+                        <td>${trainer.horseName}</td>
+                        <td>${trainer.raceName}</td>
+                        <td>$${trainer.prizeMoney?.toLocaleString() || '0'}</td>
+                    </tr>`;
+            });
+            html += '</table>';
+            return html;
+        }
+
+        handleApiCall(
+            '/api/guest/winning-trainers',
+            'winningTrainersResult',
+            button,
+            'Loaded ${count} winning trainers',
+            buildTableHTML
+        );
+    }
+
+    // 3. Trainer Winnings Summary
+    function loadTrainerWinnings() {
+        const button = document.querySelector('button[onclick="loadTrainerWinnings()"]');
+
+        function buildTableHTML(data) {
+            let html = '<table><tr><th>Rank</th><th>Trainer First Name</th><th>Trainer Last Name</th><th>Total Winnings</th></tr>';
+            data.forEach((trainer, index) => {
+                html += `<tr>
+                        <td>#${index + 1}</td>
+                        <td>${trainer.trainerFname}</td>
+                        <td>${trainer.trainerLname}</td>
+                        <td><strong>$${trainer.totalWinnings?.toLocaleString() || '0'}</strong></td>
+                    </tr>`;
+            });
+            html += '</table>';
+            return html;
+        }
+
+        handleApiCall(
+            '/api/guest/trainer-winnings',
+            'trainerWinningsResult',
+            button,
+            'Loaded winnings for ${count} trainers',
+            buildTableHTML
+        );
+    }
+
+    // 4. Track Statistics
+    function loadTrackStatistics() {
+        const button = document.querySelector('button[onclick="loadTrackStatistics()"]');
+
+        function buildTableHTML(data) {
+            let html = '<table><tr><th>Track Name</th><th>Location</th><th>Total Races</th><th>Total Horses</th><th>Track Length</th></tr>';
+            data.forEach(track => {
+                html += `<tr>
+                        <td><strong>${track.trackName}</strong></td>
+                        <td>${track.location}</td>
+                        <td>${track.totalRaces}</td>
+                        <td>${track.totalHorses}</td>
+                        <td>${track.length}m</td>
+                    </tr>`;
+            });
+            html += '</table>';
+            return html;
+        }
+
+        handleApiCall(
+            '/api/guest/track-statistics',
+            'trackStatsResult',
+            button,
+            'Loaded statistics for ${count} tracks',
+            buildTableHTML
+        );
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Horse Racing Database</title>
+    <style>
+        /* ====== VARIABLES ====== */
+        :root {
+            --accent: rgb(26, 37, 35);      /* solid color side */
+            --accent-dark: #332103;
+            --bg: #0b0e1a;
+            --text: #fff;
+            --muted: rgba(255, 255, 255, 0.8);
+            --primary: #7aa2ff;
+            --success: #32d487;
+            --font: "Poppins", "Segoe UI", system-ui, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font);
+            color: var(--text);
+            background: var(--bg);
+            overflow-x: hidden;
+        }
+
+        /* ====== NAVBAR ====== */
+        nav {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 60px;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+
+
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        /* ====== HERO SECTION ====== */
+        .hero {
+            display: grid;
+            grid-template-columns: 48% 55%;  /* color on the left, image on the right */
+            min-height: 100vh;
+        }
+
+        /* LEFT SIDE (Color) */
+        .hero-content {
+            background: linear-gradient(135deg, #201a0f 0%, #4e525a 100%); /* warm golden-brown tone */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 80px;
+            position: relative;
+            color: #fff;
+        }
+
+        /* RIGHT SIDE (Image) */
+        .hero-image {
+            background: url('image.jpg') right/cover no-repeat;
+            position: relative;
+        }
+
+        /* Fading gradient from color → image */
+
+
+
+
+
+        /* fade from image to color */
+        .hero-image::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                    to left,
+                    rgba(11, 14, 26, 0) 60%,
+                    var(--accent) 100%
+            );
+        }
+
+        /* right color side */
+        .hero-content {
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 80px;
+            position: relative;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* subtle glow */
+        .hero-content::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                    600px 400px at left center,
+                    rgba(255, 255, 255, 0.08),
+                    transparent 70%
+            );
+        }
+
+        /* text */
+        .text-block {
+            position: relative;
+            z-index: 2;
+            max-width: 500px;
+        }
+
+        .text-block h1 {
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            margin: 0 0 16px;
+            line-height: 1.1;
+            font-weight: 800;
+        }
+
+        .text-block p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0 0 36px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .btn {
+            text-decoration: none;
+            padding: 14px 26px;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: var(--accent-dark);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 34px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-outline {
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            color: #fff;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ====== FOOTER ====== */
+        footer {
+            text-align: center;
+            padding: 24px 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+            .hero-content {
+                padding: 80px 24px;
+                text-align: center;
+                justify-content: center;
+            }
+            .text-block {
+                max-width: none;
+            }
+            .hero-image::after {
+                background: linear-gradient(
+                        to bottom,
+                        rgba(11, 14, 26, 0.1) 30%,
+                        var(--accent) 100%
+                );
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class="brand"><span></span>Horse Racing DB</div>
+</nav>
+
+<!-- Split Hero -->
+
+<section class="hero">
+    <div class="hero-content">
+        <div class="text-block">
+            <h1>Welcome to the Racing Database</h1>
+            <p>Access the horse racing system as an Admin or Guest.</p>
+            <div class="buttons">
+                <a href="/admin.html" class="btn btn-primary">Admin Access</a>
+                <a href="/guest.html" class="btn btn-outline">Guest Access</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-image"></div>
+</section>
+
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
