@@ -233,13 +233,28 @@ app.delete('/api/owners/:id', (req, res) => {
             return res.status(404).json({error: 'Owner does not exist'});
         }
 
-        // Use the stored procedure
-        db.query('CALL DeleteOwner(?)', [ownerId], (err, results) => {
+        // Check if owner is also a trainer
+        db.query('SELECT * FROM Trainer WHERE trainerId = ?', [ownerId], (err, trainerResults) => {
             if (err) {
-                console.log('Delete owner error:', err);
-                return res.status(500).json({error: 'Cannot delete owner: ' + err.message});
+                console.log('Trainer check error:', err);
+                return res.status(500).json({error: 'Database error checking trainer'});
             }
-            res.json({message: 'Owner and all related horses/information deleted successfully'});
+
+            if (trainerResults.length > 0) {
+                return res.status(400).json({error: 'Cannot delete owner who is also a trainer'});
+            }
+
+            // Use the stored procedure
+            db.query('CALL DeleteOwner(?)', [ownerId], (err, results) => {
+                if (err) {
+                    console.log('Delete owner error:', err);
+                    if (err.message.includes('Cannot delete owner who is also a trainer')) {
+                        return res.status(400).json({error: 'Cannot delete owner who is also a trainer'});
+                    }
+                    return res.status(500).json({error: 'Cannot delete owner: ' + err.message});
+                }
+                res.json({message: 'Owner and all exclusively-owned horses deleted successfully'});
+            });
         });
     });
 });
