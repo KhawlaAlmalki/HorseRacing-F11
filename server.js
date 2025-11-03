@@ -465,13 +465,16 @@ app.get('/api/guest/winning-trainers', (req, res) => {
 
 app.get('/api/guest/trainer-winnings', (req, res) => {
     const query = `
-        SELECT t.fname as trainerFname, t.lname as trainerLname, 
-               SUM(rr.prize) as totalWinnings
+        SELECT
+            t.fname AS trainerFname,
+            t.lname AS trainerLname,
+            COALESCE(SUM(rr.prize), 0) AS totalWinnings
         FROM Trainer t
-        JOIN Horse h ON t.stableId = h.stableId
-        JOIN RaceResults rr ON h.horseId = rr.horseId
+                 LEFT JOIN Horse h        ON h.stableId = t.stableId
+                 LEFT JOIN RaceResults rr ON rr.horseId = h.horseId
         GROUP BY t.trainerId, t.fname, t.lname
-        ORDER BY totalWinnings DESC`;
+        ORDER BY totalWinnings DESC, t.lname, t.fname;
+    `;
 
     dbQuery(query, [], res, (results) => res.json(results));
 });

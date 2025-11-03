@@ -103,6 +103,7 @@ body{
     margin: 10px 0 16px;
     align-items: end;
 }
+
 .input-group{ min-width: 220px; flex:1 }
 .input-group label{
     display:block; margin:0 0 6px;
@@ -153,7 +154,8 @@ body{
 }
 
 /* ---------- DB views / collapsibles ---------- */
-.db-view{ margin-top:16px }
+.db-view{ margin-top:16px;
+}
 .db-header{
     cursor:pointer; padding:12px 14px; border-radius:12px;
     background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
@@ -167,13 +169,14 @@ body{
 .db-header.active::after{ transform: rotate(180deg) }
 
 .db-content{
-    max-height:0; overflow:hidden; transition:max-height .3s ease;
+    max-height:0; overflow:auto; transition:max-height .3s ease;
     border-radius: 0 0 var(--r) var(--r);
     background: rgba(255,255,255,.03);
     border:1px solid rgba(255,255,255,.08);
     border-top:none; padding:0 14px;
 }
-.db-content.open{ max-height:900px; padding:12px 14px }
+.db-content.open{ max-height:900px; padding:12px 14px;
+}
 
 /* ---------- Tables ---------- */
 table{ width:100%; border-collapse:collapse; background:transparent }
