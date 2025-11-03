@@ -323,26 +323,21 @@ INSERT INTO RaceResults VALUES('race36','horse15','second',80000);
 INSERT INTO RaceResults VALUES('race36','horse20','third',50000);
 
 -- =========================================================
--- Stored Procedure: DeleteOwner (corrected logic)
+-- Stored Procedure: DeleteOwner
 -- =========================================================
-DROP PROCEDURE IF EXISTS DeleteOwner;
 
+DROP PROCEDURE IF EXISTS DeleteOwner;
 DELIMITER //
 CREATE PROCEDURE DeleteOwner(IN owner_id VARCHAR(15))
 BEGIN
-    DECLARE exit_handler BOOLEAN DEFAULT FALSE;
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET exit_handler = TRUE;
+    DECLARE had_error BOOL DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET had_error = TRUE;
 
 START TRANSACTION;
 
--- Check if owner is also a trainer
-IF EXISTS (SELECT 1 FROM Trainer WHERE trainerId = owner_id) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot delete owner who is also a trainer';
-END IF;
 
-    -- Backup horses that will be deleted to Old_Info (ONLY exclusively owned horses)
-INSERT INTO Old_Info (horseId, horseName, age, gender, registration, stableId)
-SELECT DISTINCT h.horseId, h.horseName, h.age, h.gender, h.registration, h.stableId
+CREATE TEMPORARY TABLE tmp_horses AS
+SELECT h.horseId
 FROM Horse h
          JOIN Owns o ON h.horseId = o.horseId
 WHERE o.ownerId = owner_id
@@ -352,36 +347,25 @@ WHERE o.ownerId = owner_id
       AND o2.ownerId != owner_id
 );
 
--- Delete from RaceResults for horses owned ONLY by this owner
-DELETE rr FROM RaceResults rr
-    WHERE rr.horseId IN (
-        SELECT o.horseId FROM Owns o
-        WHERE o.ownerId = owner_id
-        AND NOT EXISTS (
-            SELECT 1 FROM Owns o2
-            WHERE o2.horseId = o.horseId
-            AND o2.ownerId != owner_id
-        )
-    );
 
-    -- Delete ownership relationships for this owner
+DELETE FROM RaceResults
+WHERE horseId IN (SELECT horseId FROM tmp_horses);
+
+
 DELETE FROM Owns WHERE ownerId = owner_id;
 
--- Delete horses owned ONLY by this owner (no other owners)
-DELETE h FROM Horse h
-    WHERE NOT EXISTS (
-        SELECT 1 FROM Owns o WHERE o.horseId = h.horseId
-    )
-    AND h.horseId IN (
-        SELECT horseId FROM Owns WHERE ownerId = owner_id
-    );
 
-    -- Finally delete the owner
+DELETE FROM Horse
+WHERE horseId IN (SELECT horseId FROM tmp_horses);
+
+
 DELETE FROM Owner WHERE ownerId = owner_id;
 
-IF exit_handler THEN
+
+IF had_error THEN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error deleting owner and related information';
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error deleting owner and related information';
 ELSE
         COMMIT;
 END IF;
